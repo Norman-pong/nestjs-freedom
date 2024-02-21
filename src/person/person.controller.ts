@@ -1,15 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { PersonService } from './person.service';
-import { CreatePersonDto } from './dto/create-person.dto';
-import { UpdatePersonDto } from './dto/update-person.dto';
+import { CreatePersonDto, UpdatePersonDto } from './dto';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
-@Controller('person')
+@Controller('api/person')
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
   @Post()
   create(@Body() createPersonDto: CreatePersonDto) {
+    return createPersonDto;
     return this.personService.create(createPersonDto);
+  }
+
+  @Post('file')
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      dest: 'uploads/',
+    }),
+  )
+  fileBody(
+    @Body() createPersonDto: CreatePersonDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    console.log(files);
+    return createPersonDto;
   }
 
   @Get()
@@ -18,7 +33,7 @@ export class PersonController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param() id: string) {
     return this.personService.findOne(+id);
   }
 
